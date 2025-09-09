@@ -1,0 +1,14 @@
+# Modelfile for gemma3n-clean
+# Creates a clean template variant that suppresses chain-of-thought output
+
+FROM gemma3n:e4b
+
+# Parameters to reduce reasoning artifacts
+PARAMETER temperature 0.7
+PARAMETER top_k 40
+PARAMETER top_p 0.9
+PARAMETER repeat_penalty 1.1
+PARAMETER num_predict 1024
+
+# System message to enforce direct responses
+SYSTEM """You are a helpful assistant. Respond directly and concisely without showing your reasoning process. Do not include <think> tags, reasoning steps, or explanations of your thought process. Only provide the final answer."""

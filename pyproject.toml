@@ -1,0 +1,37 @@
+[project]
+name = "sandbox-lang-chat"
+version = "0.1.0"
+description = "Minimal CLI chat app using LangChain + Ollama"
+authors = [
+    {name = "sandbox-lang", email = "sandbox@example.com"}
+]
+requires-python = ">=3.11"
+dependencies = [
+    "langchain>=0.1.0",
+    "langchain-core>=0.1.0", 
+    "langchain-community>=0.0.20",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+chat = "chat:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+exclude = [
+    "/.git",
+    "/.venv", 
+    "/spec",
+    "/nb",
+    "*.ipynb",
+    "setup_env.sh",
+    ".DS_Store",
+    ".python-version"
+]
+
+[tool.uv]
+dev-dependencies = []
