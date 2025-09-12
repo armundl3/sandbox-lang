@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Minimal CLI Chat App using LangChain + Ollama
-Streams responses from local Ollama models with chain-of-thought suppression.
+Streams responses from local Ollama models.
 """
 
 import sys
@@ -25,14 +25,14 @@ class Config:
         """Load configuration with environment variable overrides."""
         # Default configuration
         defaults = {
-            "model_name": "gemma3n-clean",
+            "model_name": "gemma:2b",
             "model_provider": "ollama", 
             "base_url": "http://localhost:11434",
             "keep_alive": -1,
             "streaming": True,
             "history_turns": 4,
             "timeout": 30,
-            "system_prompt": "You are a concise assistant. Reply briefly and helpfully. Do NOT include chain-of-thought, reasoning steps, or <think> blocks. Only provide final answers directly.",
+            "system_prompt": "You are a helpful assistant. Reply to user queries in a clear and informative manner.",
             "temperature": 0.7,
             "max_tokens": 1024
         }
@@ -156,11 +156,9 @@ class ChatApp:
             for chunk in self.model.stream(messages):
                 content = getattr(chunk, "content", "") or ""
                 if content:
-                    # Filter out potential chain-of-thought markers
-                    if not content.strip().startswith(("<think>", "</think>")):
-                        sys.stdout.write(content)
-                        sys.stdout.flush()
-                        accumulated_text.append(content)
+                    sys.stdout.write(content)
+                    sys.stdout.flush()
+                    accumulated_text.append(content)
             
             print()  # Add newline after response
             return "".join(accumulated_text)

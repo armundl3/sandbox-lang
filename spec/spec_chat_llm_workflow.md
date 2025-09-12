@@ -17,7 +17,7 @@ Build a **no‑agent**, **local‑only** CLI chatbot that streams responses from
 ### Non‑Functional
 - Runs fully offline after models are pulled.
 - Minimal dependencies, simple code layout.
-- Deterministic output surface (no chain‑of‑thought leakage).
+- Clean, direct model outputs.
 
 ---
 
@@ -43,23 +43,13 @@ uv run python chat.py
 ## 4) Model & Prompting
 
 ### Recommended Model Tags
-- **Primary**: `gemma3n:e4b` with clean template variant via **Modelfile**:
-  ```dockerfile
-  FROM gemma3n:e4b
-  TEMPLATE "{{ .System }}\n\n{{ .Prompt }}"
-  PARAMETER temperature 0.7
-  PARAMETER top_k 40
-  PARAMETER top_p 0.9
-  SYSTEM "Respond directly without showing reasoning process."
-  ```
-  Build: `ollama create gemma3n-clean -f Modelfile`
+- **Primary**: `gemma:2b` - small, fast model suitable for local use
 
 - **Alternatives**: Use `*-instruct`/`*-chat` tags (e.g., `llama3.2:3b-instruct`, `gemma:2b`).
 
 ### System Prompt (default)
 ```
-"You are a concise assistant. Reply briefly and helpfully. 
-Do NOT include chain-of-thought or hidden reasoning—only final answers."
+"You are a helpful assistant. Reply to user queries in a clear and informative manner."
 ```
 
 ---
@@ -152,7 +142,7 @@ Do NOT include chain-of-thought or hidden reasoning—only final answers."
 
 ```yaml
 # config.yaml (optional)
-model_name: "gemma3n-clean"   # or "gemma:2b", "llama3.2:3b-instruct"
+model_name: "gemma:2b"   # or "llama3.2:3b-instruct", "qwen:2b"
 model_provider: "ollama"
 base_url: "http://localhost:11434"
 keep_alive: -1                # keep model loaded
@@ -162,14 +152,12 @@ timeout: 30
 temperature: 0.7
 max_tokens: 1024
 system_prompt: |
-  You are a concise assistant. Reply briefly and helpfully.
-  Do NOT include chain-of-thought, reasoning steps, or <think> blocks.
-  Only provide final answers directly.
+  You are a helpful assistant. Reply to user queries in a clear and informative manner.
 ```
 
 **Environment Variable Overrides:**
 ```bash
-export MODEL_NAME="gemma3n:e4b"
+export MODEL_NAME="gemma:2b"
 export SYSTEM_PROMPT="You are a helpful coding assistant."
 export STREAMING=true
 export HISTORY_TURNS=6
@@ -183,8 +171,7 @@ export HISTORY_TURNS=6
 .
 ├─ chat.py                 # main REPL with config management
 ├─ config.yaml             # YAML configuration with defaults
-├─ pyproject.toml          # UV project configuration
-└─ Modelfile               # clean template for gemma3n:e4b
+└─ pyproject.toml          # UV project configuration
 ```
 
 **chat.py (essentials)**
@@ -192,7 +179,7 @@ export HISTORY_TURNS=6
 - Robust error handling with helpful Ollama troubleshooting messages.
 - `init_chat_model()` with full parameter support (temperature, timeout, etc).
 - Build messages: `[SystemMessage, ...History..., HumanMessage]`
-- Stream responses with chain-of-thought filtering.
+- Stream responses directly from the model.
 - History management with configurable turn limits.
 - Signal handling for graceful shutdown (Ctrl+C).
 
@@ -201,7 +188,7 @@ export HISTORY_TURNS=6
 ## 10) Error Handling
 
 - **Ollama not running** → Show actionable hint: “Start with `ollama serve`.”
-- **Model missing** → Suggest `ollama run gemma3n:e4b` + `ollama create gemma3n-clean -f Modelfile`.
+- **Model missing** → Suggest `ollama pull gemma:2b`.
 - **Connection refused** → Confirm port `:11434` / firewall.
 - **Invalid JSON (if using `format: json`)** → Fallback to raw text with warning.
 
@@ -211,7 +198,7 @@ export HISTORY_TURNS=6
 
 - Unit: history truncation, exit commands, config parsing.
 - Smoke: start REPL, ask 2–3 prompts, confirm stream and final text.
-- Prompt hygiene: verify **no** `<think>` blocks appear with `gemma3n-clean` or `*-instruct`.
+- Response quality: verify natural responses from the model.
 - Configuration: test YAML loading and environment variable overrides.
 - UV integration: verify `uv run python chat.py` works correctly.
 
@@ -240,7 +227,7 @@ export HISTORY_TURNS=6
 - User can enter a message and see **token‑streamed** output.
 - App exits cleanly on `/exit` or Ctrl+C.
 - Uses local Ollama model; works offline (post‑pull).
-- No chain‑of‑thought is surfaced when using `gemma3n-clean` or `-instruct` models.
+- Direct, natural responses from the model.
 - Configuration loads from YAML and respects environment variables.
 
 ---
@@ -271,8 +258,7 @@ build-backend = "hatchling.build"
 # Setup
 uv sync                              # Install dependencies
 ollama serve                         # Start Ollama (separate terminal)
-ollama run gemma3n:e4b              # Pull base model
-ollama create gemma3n-clean -f Modelfile  # Create clean variant
+ollama pull gemma:2b               # Pull model
 
 # Run
 uv run python chat.py               # Direct execution
@@ -284,6 +270,6 @@ source .venv/bin/activate && python chat.py  # Activate first
 
 ## Interview Lens (why this matters)
 
-- **Prompt/Template control**: Suppressing chain‑of‑thought at the **Modelfile TEMPLATE** is a production hygiene best‑practice.
+- **Direct interaction**: Using standard models provides direct, unfiltered responses.
 - **Latency & UX**: Token streaming → faster perceived response; short history → VRAM‑aware scaling.
 - **Local inference trade‑offs**: privacy & cost vs. throughput & model quality.
